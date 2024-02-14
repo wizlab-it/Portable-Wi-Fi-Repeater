@@ -1,7 +1,7 @@
 /**
  * @package Portable WiFi Repeater
  * @author WizLab.it
- * @version 20240206.057
+ * @version 20240214.060
  */
 
 #include <Arduino.h>
@@ -455,7 +455,7 @@ void checkBattery() {
 
   //Read battery voltage
   long batteryVoltageRaw = analogRead(LOWBATTERY_PIN);
-  float batteryVoltageVolt = (map(batteryVoltageRaw, 0, 1024, 0, 3000) / 1000.0) * 2; //Value is doubled because of the voltage divider
+  float batteryVoltageVolt = (map(batteryVoltageRaw, 10, 1014, 0, 3000) / 1000.0) * 2; //Map is 10-1014 due to A/D error. Value is doubled because of the voltage divider
 
   //Battery level on serial monitor
   Serial.printf("Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
@@ -464,9 +464,9 @@ void checkBattery() {
   display.fillRect((OLED_WIDTH - 20), 0, 20, 8, BLACK);
   display.drawRoundRect((OLED_WIDTH - 20), 0, 18, 7, 2, WHITE);
   display.fillRoundRect((OLED_WIDTH - 3), 2, 3, 3, 2, WHITE);
-  if(batteryVoltageVolt > 3.55) display.fillRect((OLED_WIDTH - 18), 2, 4, 3, WHITE);
+  if(batteryVoltageVolt > 3.60) display.fillRect((OLED_WIDTH - 18), 2, 4, 3, WHITE);
   if(batteryVoltageVolt > 3.75) display.fillRect((OLED_WIDTH - 13), 2, 4, 3, WHITE);
-  if(batteryVoltageVolt > 3.95) display.fillRect((OLED_WIDTH - 8), 2, 4, 3, WHITE);
+  if(batteryVoltageVolt > 3.90) display.fillRect((OLED_WIDTH - 8), 2, 4, 3, WHITE);
   display.display();
 
   //Battery level on led (3 mid-speed blinks if low-battery)
