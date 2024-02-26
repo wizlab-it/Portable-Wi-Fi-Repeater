@@ -1,7 +1,7 @@
 /**
  * @package Portable WiFi Repeater
  * @author WizLab.it
- * @version 20240214.060
+ * @version 20240226.062
  */
 
 #include <Arduino.h>
@@ -107,12 +107,9 @@ void setup() {
   Serial.begin(115200);
   Serial.println(F("\n\n\n\n\n"));
   Serial.println(F("************************************************************************"));
-  Serial.println(F("***                     Portable Wi-Fi Repeater                      ***"));
-  Serial.println(F("***                          by WizLab.it                            ***"));
-  Serial.println(F("************************************************************************\n"));
-  Serial.println(F("------------------------------------------------------------------------"));
-  Serial.println(F("---                              Setup                               ---"));
-  Serial.println(F("------------------------------------------------------------------------"));
+  Serial.println(F("***           ~  Portable Wi-Fi Repeater - by WizLab.it  ~           ***"));
+  Serial.println(F("************************************************************************"));
+  Serial.println(F("[~~~~~] Setup:"));
 
   //GPIO pins configuration
   pinMode(LOWBATTERY_PIN, INPUT);
@@ -124,9 +121,9 @@ void setup() {
 
   //OLED
   if(display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-    Serial.println(F("OLED activated"));
+    Serial.println(F(" [+] OLED activated"));
   } else {
-    Serial.println(F("OLED init failed"));
+    Serial.println(F(" [-] OLED init failed"));
   }
 
   //Splash screen
@@ -151,7 +148,7 @@ void setup() {
   display.display();
 
   //Try to load a repeater configuration from EEPROM
-  Serial.print(F("Read repeater configuration from EEPROM: "));
+  Serial.print(F(" [+] Read repeater configuration from EEPROM: "));
   bool hasValidConfig = repeaterConfigLoad();
   if(hasValidConfig) {
     REPEATER_MODE = REPEATER_MODE_REPEATER;
@@ -169,11 +166,8 @@ void setup() {
   }
 
   //Setup completed
-  Serial.println(F("\nSetup completed."));
-  Serial.println(F("------------------------------------------------------------------------\n"));
-  Serial.println(F("------------------------------------------------------------------------"));
-  Serial.println(F("---                             Running                              ---"));
-  Serial.println(F("------------------------------------------------------------------------"));
+  Serial.println(F("[~~~~~] Setup complete."));
+  Serial.println(F("[~~~~~] Running:"));
 }
 
 
@@ -214,11 +208,12 @@ bool repeaterConfigLoad() {
   //Check if to reset configuration
   if(digitalRead(BTN1_PIN) == LOW) {
     repeaterConfigClear(true);
-    Serial.print(F("(*** CONFIGURATION RESET ***) "));
+    Serial.print(F("\n [+] Configuration reset"));
     oledPrintLine(1, F("  * Configuration *"));
     oledPrintLine(2, F("  *     reset     *"));
     blinkLed(10, 1);
     delay(3000);
+    ESP.restart();
   } else {
     //Read configuration and calculate CRC
     EEPROM.get(EEPROM_CONFIG_ADDRESS, REPEATER_CONFIG);
@@ -263,12 +258,12 @@ void repeaterConfigClear(bool resetEeprom) {
  * Repeater mode
  */
 void repeaterModeRepeaterRun() {
-  Serial.println(F("Activating repeater mode..."));
+  Serial.println(F(" [+] Activating repeater mode..."));
 
   //Connect to Access Point that has to be repeated
   WiFi.mode(WIFI_STA);
   WiFi.begin(REPEATER_CONFIG.config.staSSID, REPEATER_CONFIG.config.staPSK);
-  Serial.print(F(" - connecting to network to be repeated: "));
+  Serial.print(F("    [+] connecting to network to be repeated: "));
   oledPrintLine(2, "    Connecting...");
   while(WiFi.status() != WL_CONNECTED) {
     Serial.print(F("."));
@@ -278,7 +273,7 @@ void repeaterModeRepeaterRun() {
   oledPrintLine(2, "     Connected!");
 
   //Configure repeater network
-  Serial.print(F(" - configuring repeater network: "));
+  Serial.print(F("    [+] configuring repeater network: "));
   IPAddress localIp = IPAddress(10, random(0, 255), random(0, 255), 1);
   WiFi.softAPConfig(localIp, localIp, IPAddress(255, 255, 255, 0));
   auto &dhcpserver = WiFi.softAPDhcpServer();
@@ -286,20 +281,20 @@ void repeaterModeRepeaterRun() {
   Serial.printf("OK! (IP: %s)\n", WiFi.softAPIP().toString().c_str());
 
   //Activate repeater network
-  Serial.print(F(" - activate repeater network: "));
+  Serial.print(F("    [+] activate repeater network: "));
   WiFi.softAP(REPEATER_CONFIG.config.apSSID, REPEATER_CONFIG.config.apPSK);
   Serial.printf("OK! (SSID: %s)\n", WiFi.softAPSSID().c_str());
 
   //Activate NAPT
-  Serial.print(F(" - activate NAPT: "));
+  Serial.print(F("    [+] activate NAPT: "));
   err_t naptStatus = ip_napt_init(REPEATER_NAPT, REPEATER_NAPT_PORT);
   if(naptStatus == ERR_OK) {
     naptStatus = ip_napt_enable_no(SOFTAP_IF, 1);
   }
   if(naptStatus == ERR_OK) {
-    Serial.println(F("OK!\n\nRepeater mode activated successfully!"));
-    Serial.printf(" - repeated network: %s\n", REPEATER_CONFIG.config.staSSID);
-    Serial.printf(" - repeater network: %s\n", REPEATER_CONFIG.config.apSSID);
+    Serial.println(F("OK!\n [+] Repeater mode activated successfully!"));
+    Serial.printf("    [i] repeated network: %s\n", REPEATER_CONFIG.config.staSSID);
+    Serial.printf("    [i] repeater network: %s\n", REPEATER_CONFIG.config.apSSID);
     oledPrintLine(1, REPEATER_CONFIG.config.staSSID);
     oledPrintLine(2, "        <===>");
     oledPrintLine(3, REPEATER_CONFIG.config.apSSID);
@@ -316,10 +311,10 @@ void repeaterModeRepeaterRun() {
  * Config mode
  */
 void repeaterModeConfigRun() {
-  Serial.println(F("Activating configuration mode..."));
+  Serial.println(F(" [+] Activating configuration mode..."));
 
   //Activate access point
-  Serial.print(F(" - activate config WiFi network: "));
+  Serial.print(F("    [+] activate config WiFi network: "));
   String configModeSSID = REPEATER_CONFIG_SSID + String(random(1000, 9999));
   IPAddress localIp = IPAddress(192, 168, 1, 1);
   WiFi.softAPConfig(localIp, localIp, IPAddress(255, 255, 255, 0));
@@ -333,7 +328,7 @@ void repeaterModeConfigRun() {
   apStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(&apOnStationDisconnected);
 
   //Activate configuration web server
-  Serial.print(F(" - activate config web server: "));
+  Serial.print(F("    [+] activate config web server: "));
   configWebServerEngine();
   configWebServer.begin();
   char configURL[30];
@@ -341,7 +336,7 @@ void repeaterModeConfigRun() {
   Serial.printf("OK! (URL: %s)\n", configURL);
 
   //Activate DNS for local resolution to configuration portal
-  Serial.print(F(" - activate config dns server: "));
+  Serial.print(F("    [+] activate config DNS server: "));
   configDnsServer.start(53, "*", WiFi.softAPIP());
   Serial.println(F("OK!"));
 
@@ -414,11 +409,11 @@ void configWebServerRoot() {
 
     //Save new configuration on EEPROM
     if(repeaterConfigSave()) {
-      Serial.println(F("New configuration saved on EEPROM"));
+      Serial.println(F(" [+] New configuration saved on EEPROM"));
       oledPrintLine(3, F("   * CONFIG OK! *"));
       blinkLed(10, 1);
     } else {
-      Serial.println(F("New configuration not saved on EEPROM: invalid configuration"));
+      Serial.println(F(" [-] New configuration not saved on EEPROM: invalid configuration"));
       oledPrintLine(3, F("   * CONFIG KO. *"));
     }
 
@@ -458,7 +453,7 @@ void checkBattery() {
   float batteryVoltageVolt = (map(batteryVoltageRaw, 10, 1014, 0, 3000) / 1000.0) * 2; //Map is 10-1014 due to A/D error. Value is doubled because of the voltage divider
 
   //Battery level on serial monitor
-  Serial.printf("Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
+  Serial.printf(" [i] Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
 
   //Battery level on OLED
   display.fillRect((OLED_WIDTH - 20), 0, 20, 8, BLACK);
@@ -482,7 +477,7 @@ void checkConnectedStations() {
   __Timers.connectedStationsCheck = millis() + 5000;
 
   //Print connected stations
-  Serial.printf("Connected stations: %d\n", WiFi.softAPgetStationNum());
+  Serial.printf(" [i] Connected stations: %d\n", WiFi.softAPgetStationNum());
   display.fillRect((OLED_WIDTH - 60), 0, 36, 8, BLACK);
   display.setTextSize(1);
   display.setCursor((OLED_WIDTH - 60), 0);
@@ -565,10 +560,10 @@ void oledPrintLine(uint8_t line, String message) {
  * Handlers when station connects/disconnects to/from the Access Point
  */
 void apOnStationConnected(const WiFiEventSoftAPModeStationConnected& evt) {
-  Serial.printf("WiFi Access Point: Station connected: %x:%x:%x:%x:%x:%x (count: %d)\n", evt.mac[0], evt.mac[1], evt.mac[2], evt.mac[3], evt.mac[4], evt.mac[5], WiFi.softAPgetStationNum());
+  Serial.printf(" [i] WiFi Access Point: Station connected: %x:%x:%x:%x:%x:%x (count: %d)\n", evt.mac[0], evt.mac[1], evt.mac[2], evt.mac[3], evt.mac[4], evt.mac[5], WiFi.softAPgetStationNum());
 }
 void apOnStationDisconnected(const WiFiEventSoftAPModeStationDisconnected& evt) {
-  Serial.printf("WiFi Access Point: Station disconnected: %x:%x:%x:%x:%x:%x (count: %d)\n", evt.mac[0], evt.mac[1], evt.mac[2], evt.mac[3], evt.mac[4], evt.mac[5], WiFi.softAPgetStationNum());
+  Serial.printf(" [i] WiFi Access Point: Station disconnected: %x:%x:%x:%x:%x:%x (count: %d)\n", evt.mac[0], evt.mac[1], evt.mac[2], evt.mac[3], evt.mac[4], evt.mac[5], WiFi.softAPgetStationNum());
 }
 
 /**
