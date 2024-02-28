@@ -1,7 +1,7 @@
 /**
  * @package Portable WiFi Repeater
  * @author WizLab.it
- * @version 20240226.062
+ * @version 20240228.066
  */
 
 #include <Arduino.h>
@@ -23,7 +23,8 @@
  */
 
 //Low-battery
-#define LOWBATTERY_PIN A0
+#define LOWBATTERY_PIN            A0
+#define LOWBATTERY_COMPENSATION   2.10
 
 //LED
 // - [runtime] 3 mid-speed blinks every 15 seconds: battery low
@@ -450,7 +451,7 @@ void checkBattery() {
 
   //Read battery voltage
   long batteryVoltageRaw = analogRead(LOWBATTERY_PIN);
-  float batteryVoltageVolt = (map(batteryVoltageRaw, 10, 1014, 0, 3000) / 1000.0) * 2; //Map is 10-1014 due to A/D error. Value is doubled because of the voltage divider
+  float batteryVoltageVolt = (map(batteryVoltageRaw, 10, 1014, 0, 3000) / 1000.0) * LOWBATTERY_COMPENSATION; //Map is 10-1014 due to A/D error. Value is doubled because of the voltage divider, plus compensation due to voltage divider
 
   //Battery level on serial monitor
   Serial.printf(" [i] Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
