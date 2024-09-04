@@ -52,6 +52,8 @@ Created by [WizLab.it](https://www.wizlab.it/)
 
 GitHub: [https://github.com/wizlab-it/temperature-monitor/](https://github.com/wizlab-it/temperature-monitor/)
 
+[ESP8266 Documentation](https://arduino-esp8266.readthedocs.io/)
+
 
 
 ## License

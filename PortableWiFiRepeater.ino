@@ -1,7 +1,8 @@
 /**
  * @package Portable WiFi Repeater
  * @author WizLab.it
- * @version 20240228.066
+ * @board Generic ESP8266
+ * @version 20240904.068
  */
 
 #include <Arduino.h>
@@ -453,20 +454,33 @@ void checkBattery() {
   long batteryVoltageRaw = analogRead(LOWBATTERY_PIN);
   float batteryVoltageVolt = (map(batteryVoltageRaw, 10, 1014, 0, 3000) / 1000.0) * LOWBATTERY_COMPENSATION; //Map is 10-1014 due to A/D error. Value is doubled because of the voltage divider, plus compensation due to voltage divider
 
-  //Battery level on serial monitor
-  Serial.printf(" [i] Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
+  //If battery voltage is lower than 3.35V, it means its powered via USB power supply
+  if(batteryVoltageVolt < 3.35) {
+    Serial.printf(" [i] USB power supply\n");
 
-  //Battery level on OLED
-  display.fillRect((OLED_WIDTH - 20), 0, 20, 8, BLACK);
-  display.drawRoundRect((OLED_WIDTH - 20), 0, 18, 7, 2, WHITE);
-  display.fillRoundRect((OLED_WIDTH - 3), 2, 3, 3, 2, WHITE);
-  if(batteryVoltageVolt > 3.60) display.fillRect((OLED_WIDTH - 18), 2, 4, 3, WHITE);
-  if(batteryVoltageVolt > 3.75) display.fillRect((OLED_WIDTH - 13), 2, 4, 3, WHITE);
-  if(batteryVoltageVolt > 3.90) display.fillRect((OLED_WIDTH - 8), 2, 4, 3, WHITE);
-  display.display();
+    //Draw plug icon
+    display.fillRect((OLED_WIDTH - 20), 0, 20, 8, BLACK);
+    display.drawLine((OLED_WIDTH - 20), 4, (OLED_WIDTH - 16), 4, WHITE);
+    display.fillCircle((OLED_WIDTH - 13), 4, 3, WHITE);
+    display.fillRect((OLED_WIDTH - 11), 1, 4, 7, WHITE);
+    display.drawLine((OLED_WIDTH - 7), 2, (OLED_WIDTH - 5), 2, WHITE);
+    display.drawLine((OLED_WIDTH - 7), 6, (OLED_WIDTH - 5), 6, WHITE);
+  } else {
+    //Battery level on serial monitor
+    Serial.printf(" [i] Battery voltage: %0.2f V (Raw: %d)\n", batteryVoltageVolt, batteryVoltageRaw);
 
-  //Battery level on led (3 mid-speed blinks if low-battery)
-  if(batteryVoltageVolt < 3.55) blinkLed(3, 2);
+    //Battery level on OLED
+    display.fillRect((OLED_WIDTH - 20), 0, 20, 8, BLACK);
+    display.drawRoundRect((OLED_WIDTH - 20), 0, 18, 7, 2, WHITE);
+    display.fillRoundRect((OLED_WIDTH - 3), 2, 3, 3, 2, WHITE);
+    if(batteryVoltageVolt > 3.60) display.fillRect((OLED_WIDTH - 18), 2, 4, 3, WHITE);
+    if(batteryVoltageVolt > 3.75) display.fillRect((OLED_WIDTH - 13), 2, 4, 3, WHITE);
+    if(batteryVoltageVolt > 3.90) display.fillRect((OLED_WIDTH - 8), 2, 4, 3, WHITE);
+    display.display();
+
+    //Battery level on led (3 mid-speed blinks if low-battery)
+    if(batteryVoltageVolt < 3.60) blinkLed(3, 2);
+  }
 }
 
 /**
