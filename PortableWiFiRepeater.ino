@@ -2,7 +2,7 @@
  * @package Portable WiFi Repeater
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20240904.068
+ * @version 20241003.073
  */
 
 #include <Arduino.h>
@@ -263,6 +263,7 @@ void repeaterModeRepeaterRun() {
   Serial.println(F(" [+] Activating repeater mode..."));
 
   //Connect to Access Point that has to be repeated
+  uint8_t connectingTimer = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(REPEATER_CONFIG.config.staSSID, REPEATER_CONFIG.config.staPSK);
   Serial.print(F("    [+] connecting to network to be repeated: "));
@@ -270,6 +271,12 @@ void repeaterModeRepeaterRun() {
   while(WiFi.status() != WL_CONNECTED) {
     Serial.print(F("."));
     delay(500);
+
+    //If trying to connect for more than 5 minutes, then restart the ESP
+    connectingTimer++;
+    if(connectingTimer > (5 * 60 * 2)) {
+      ESP.restart();
+    }
   }
   Serial.printf(" OK! (IP: %s)\n", WiFi.localIP().toString().c_str());
   oledPrintLine(2, "     Connected!");
