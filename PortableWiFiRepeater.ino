@@ -263,7 +263,7 @@ void repeaterModeRepeaterRun() {
   Serial.println(F(" [+] Activating repeater mode..."));
 
   //Connect to Access Point that has to be repeated
-  uint8_t connectingTimer = 0;
+  uint16_t connectingTimer = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(REPEATER_CONFIG.config.staSSID, REPEATER_CONFIG.config.staPSK);
   Serial.print(F("    [+] connecting to network to be repeated: "));
@@ -272,9 +272,11 @@ void repeaterModeRepeaterRun() {
     Serial.print(F("."));
     delay(500);
 
-    //If trying to connect for more than 5 minutes, then restart the ESP
+    //If trying to connect for more than 3 minutes, then restart the ESP
+    Serial.println(connectingTimer);
     connectingTimer++;
-    if(connectingTimer > (5 * 60 * 2)) {
+    if(connectingTimer > (3 * 60 * 2)) {
+      Serial.println("Restart");
       ESP.restart();
     }
   }
