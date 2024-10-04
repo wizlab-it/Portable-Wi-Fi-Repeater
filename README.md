@@ -1,6 +1,6 @@
 # Portable Wi-Fi Repeater
 
-This is a battery-powered Wi-Fi Repeater based on the ESP8266 board, than can be used to extend the range of a Wi-Fi Network in areas where it could be difficult to use standard Wi-Fi repeaters.
+This is a battery-powered Portable Wi-Fi Repeater based on the ESP8266 board, than can be used to extend the range of a Wi-Fi Network in areas where it could be difficult to use standard Wi-Fi repeaters.
 
 The repeater connects to the Wi-Fi Network to be extended and creates its own Wi-Fi Network. Traffic on the new Wi-Fi Network is routed through the original network.
 

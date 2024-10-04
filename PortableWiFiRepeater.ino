@@ -2,7 +2,7 @@
  * @package Portable WiFi Repeater
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20241003.073
+ * @version 20241004.075
  */
 
 #include <Arduino.h>
@@ -273,10 +273,11 @@ void repeaterModeRepeaterRun() {
     delay(500);
 
     //If trying to connect for more than 3 minutes, then restart the ESP
-    Serial.println(connectingTimer);
     connectingTimer++;
     if(connectingTimer > (3 * 60 * 2)) {
-      Serial.println("Restart");
+      Serial.println("Restart.");
+      oledPrintLine(2, "    Restart");
+      delay(2500);
       ESP.restart();
     }
   }
