@@ -2,7 +2,7 @@
  * @package Portable WiFi Repeater
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20241004.075
+ * @version 20241006.077
  */
 
 #include <Arduino.h>
@@ -82,6 +82,7 @@ struct {
   unsigned long batteryCheck = 0;
   unsigned long connectedStationsCheck = 0;
   unsigned long staStatus = 0;
+  unsigned long reconnectTimeout = 0;
 } __Timers;
 
 
@@ -524,6 +525,7 @@ void checkStatusSTA() {
   //Print STA connection status
   if(WiFi.status() == WL_CONNECTED) {
     oledPrintLine(2, "        <===>");
+    __Timers.reconnectTimeout = 0;
 
     //If BTN1 is pressed, then show RSSI with led blinks
     if(digitalRead(BTN1_PIN) == LOW) {
@@ -534,6 +536,17 @@ void checkStatusSTA() {
     }
   } else {
     oledPrintLine(2, "   Reconnecting...");
+    if(__Timers.reconnectTimeout == 0) {
+      __Timers.reconnectTimeout = millis() + (3 * 60 * 1000);
+    } else {
+      //If trying to reconnect for more than 3 minutes, then restart the ESP
+      if(__Timers.reconnectTimeout < millis()) {
+        Serial.println("Restart.");
+        oledPrintLine(2, "    Restart");
+        delay(2500);
+        ESP.restart();
+      }
+    }
   }
 
   //Print STA RSSI
